@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!-- In this file, you will ONLY need to change the fragment shader. -->
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <title>Homework 4</title>
+    <style>
+        input[type="range"] {
+            width: calc(100% - 530px);
+            min-width: 100px;
+        }
+        canvas {
+            float:left;
+        }
+    </style>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec3 vPosition;
+attribute vec3 vNormal;
+
+uniform mat4 mat;
+
+varying vec3 norm;
+varying vec3 pos;
+varying vec3 eye;
+void main()
+{
+    gl_Position = mat * vec4(vPosition, 1.0) * vec4(1.0, 1.0, -1.0, 1.0);
+    // camera is at (0, 0, 1)
+    // camera is looking toward (0, 0, -1)
+    norm = mat3(mat) * vNormal;
+    pos = (mat * vec4(vPosition, 1.0)).xyz;
+    eye = vec3(0.0, 0.0, 1.0) - pos;
+}
+</script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+//I’m pretty sure we want another lightDir here that will change in the js file
+uniform vec3 lightDir;
+uniform vec3 mouseLightDir;
+uniform vec3 lightColor;
+uniform vec3 mouseLightColor;
+uniform vec3 ambientColor;
+uniform vec3 surfaceDiffuse;
+uniform vec3 surfaceSpec;
+
+varying vec3 norm;
+varying vec3 pos;
+varying vec3 eye;
+
+void main()
+{
+    vec3 normN = normalize(norm);
+    vec3 lightDirN = normalize(lightDir);
+    vec3 mouseLightDirN = normalize(mouseLightDir);
+    vec3 answer = ambientColor * surfaceDiffuse;
+    float diffuseAmount = max(dot(normN, lightDirN), 0.0);
+    float mouseDiffuseAmount = max(dot(normN, mouseLightDirN), 0.0);
+    answer += diffuseAmount * lightColor * surfaceDiffuse;
+    answer += mouseDiffuseAmount * mouseLightColor * surfaceDiffuse;
+    vec3 halfN = normalize(lightDirN + normalize(eye));
+    vec3 mouseHalfN = normalize(mouseLightDirN + normalize(eye));
+    float specAmount = max(dot(halfN, normN), 0.0);
+    float mouseSpecAmount = max(dot(mouseHalfN, normN), 0.0);
+    answer += pow(specAmount, 1000.0) * lightColor * surfaceSpec;
+    answer += pow(mouseSpecAmount, 1000.0) * mouseLightColor * surfaceSpec;
+    // add specular term here
+    // use pow for exponent
+    gl_FragColor = vec4(answer, 1.0);
+}
+</script>
+
+    <script type="text/javascript" src="Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="Common/initShaders.js"></script>
+    <script type="text/javascript" src="Common/MV.js"></script>
+    <script type="text/javascript" src="fdsa.js"></script>
+    <script type="text/javascript" src="hw4.js"></script>
+</head>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+    Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+<div id="status">&nbsp;</div>
+<h2>Rotation</h2>
+<label for="rot1">Rotation 1: </label>
+<input type="range" min="-180" max="180" value="0" step="any" id="rot1">
+
+<label for="rot2">Rotation 2: </label>
+<input type="range" min="-180" max="180" value="0" step="any" id="rot2">
+
+<label for="rot3">Rotation 3: </label>
+<input type="range" min="-180" max="180" value="0" step="any" id="rot3">
+
+<label for="scale1">Scale: </label>
+<input type="range" min="-2" max="4" value="1" step="any" id="scale1">
+
+<label for="t1">Translation 1: </label>
+<input type="range" min="-1" max="1" value="0" step="any" id="t1">
+
+<label for="t2">Translation 2: </label>
+<input type="range" min="-1" max="1" value="0" step="any" id="t2">
+</body>
+</html>
